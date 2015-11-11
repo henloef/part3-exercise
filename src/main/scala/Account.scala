@@ -24,12 +24,17 @@ class Account(val accountId: String, val bankId: String, val initialBalance: Dou
 
   def getTransactions: List[Transaction] = {
     // Should return a list of all Transaction-objects stored in transactions
-    ???
+    transactions.valuesIterator.toList
   }
 
   def allTransactionsCompleted: Boolean = {
     // Should return whether all Transaction-objects in transactions are completed
-    ???
+    val list = getTransactions
+    for(t <- list){
+      if(!t.isCompleted) false
+    }
+    true
+
   }
 
   def withdraw(amount: Double): Unit = {
@@ -49,7 +54,7 @@ class Account(val accountId: String, val bankId: String, val initialBalance: Dou
 
   def sendTransactionToBank(t: Transaction): Unit = {
     // Should send a message containing t to the bank of this account
-    ???
+    BankManager.
   }
 
   def transferTo(accountNumber: String, amount: Double): Transaction = {
@@ -91,7 +96,7 @@ class Account(val accountId: String, val bankId: String, val initialBalance: Dou
 
     case t: Transaction => {
       // Handle incoming transaction
-      ???
+
     }
     
     case msg => ???
