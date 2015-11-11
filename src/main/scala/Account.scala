@@ -1,3 +1,5 @@
+import java.util.NoSuchElementException
+
 import akka.actor._
 import exceptions._
 import scala.collection.immutable.HashMap
@@ -54,22 +56,35 @@ class Account(val accountId: String, val bankId: String, val initialBalance: Dou
 
   def sendTransactionToBank(t: Transaction): Unit = {
     // Should send a message containing t to the bank of this account
-    BankManager.
+    val bank = BankManager.findBank(this.bankId)
+    bank ! t
   }
 
   def transferTo(accountNumber: String, amount: Double): Transaction = {
     
     val t = new Transaction(from = getFullAddress, to = accountNumber, amount = amount)
 
-    if (reserveTransaction(t)) {
-      try {
-        withdraw(amount)
-        sendTransactionToBank(t)
 
-      } catch {
-        case _: NoSufficientFundsException | _: IllegalAmountException =>
-          t.status = TransactionStatus.FAILED
+
+
+
+
+
+    try {
+    val acc: ActorRef = BankManager.findAccount(accountNumber.substring(0, 4), accountNumber.substring(4))
+      if (reserveTransaction(t)) {
+        try {
+          withdraw(amount)
+          sendTransactionToBank(t)
+
+        } catch {
+          case _: NoSufficientFundsException | _: IllegalAmountException =>
+            t.status = TransactionStatus.FAILED
+        }
       }
+    }
+    catch {
+      case nsse: NoSuchElementException => t.status = TransactionStatus.FAILED
     }
 
     t
@@ -92,14 +107,15 @@ class Account(val accountId: String, val bankId: String, val initialBalance: Dou
       ???
     }
 
-    case BalanceRequest => ??? // Should return current balance
+    case BalanceRequest => sender ! getBalanceAmount // Should return current balance
 
     case t: Transaction => {
       // Handle incoming transaction
+      this.deposit(t.amount)
 
     }
     
-    case msg => ???
+    case msg => System.out.println("msgmsg")
   }
 
   def getBalanceAmount: Double = balance.amount
